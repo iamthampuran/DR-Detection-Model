@@ -5,6 +5,7 @@ from PIL import Image
 import numpy as np
 import os
 
+
 # Load the CSV file with the labels
 df = pd.read_csv('ODIR-5K/ODIR-5K/input.csv')
 # Extract the labels for DR
@@ -23,7 +24,7 @@ model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Flatten())
 model.add(layers.Dropout(0.5))
 model.add(layers.Dense(512, activation='relu'))
-model.add(layers.Dense(1, activation='sigmoid'))
+model.add(layers.Dense(1, activation='relu'))
 
 # Compile the model
 model.compile(loss='binary_crossentropy',
@@ -33,13 +34,35 @@ model.compile(loss='binary_crossentropy',
 # Load the image files
 folder_path = 'ODIR-5K/ODIR-5K/Training Images'
 image_files = os.listdir(folder_path)
-# print(len(image_files))
-let = len(image_files)/2
-counter = 0
+
+k=0
+simple = []
+img_array = []
+for i in image_files:
+    name = i[:i.find('_')]
+    n1 = int(name)
+    simple.append(n1)
+simple.sort()
+
+for i in simple:
+    if k %2==0:
+        j = str(i)
+        j = j + "_right.jpg"
+        k+=1
+    # else:
+    #     j = str(i)
+    #     j = j + "_right.jpg"
+    else:
+        k+=1
+        continue
+    img_array.append(j)
+    
+image_files = img_array
+# print("Image files = ",image_files)
+
+
 X = []
 for filename in image_files:
-    if counter >= let:
-        break
     # Open and resize the image with PIL
     image = Image.open(os.path.join(folder_path, filename)).resize((224, 224))
     print(filename)
@@ -49,10 +72,11 @@ for filename in image_files:
     img_array = img_array / 255.0
     # Add the image array to the list of X values
     X.append(img_array)
-    counter+=1
+    # counter+=1
 
 # Convert the list of X values to a numpy array
 X = np.array(X)
+print("Length = ",len(X))
 
 # Train the model
 model.fit(X, y, epochs=10, batch_size=32, verbose=1)
