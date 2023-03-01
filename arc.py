@@ -4,7 +4,7 @@ import pandas as pd
 from PIL import Image
 import numpy as np
 import os
-
+import cv2
 
 # Load the CSV file with the labels
 df = pd.read_csv('ODIR-5K/ODIR-5K/input.csv')
@@ -24,7 +24,7 @@ model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Flatten())
 model.add(layers.Dropout(0.5))
 model.add(layers.Dense(512, activation='relu'))
-model.add(layers.Dense(1, activation='relu'))
+model.add(layers.Dense(1, activation='sigmoid'))
 
 # Compile the model
 model.compile(loss='binary_crossentropy',
@@ -47,7 +47,7 @@ simple.sort()
 for i in simple:
     if k %2==0:
         j = str(i)
-        j = j + "_right.jpg"
+        j = j + "_left.jpg"
         k+=1
     # else:
     #     j = str(i)
@@ -63,16 +63,29 @@ image_files = img_array
 
 X = []
 for filename in image_files:
-    # Open and resize the image with PIL
-    image = Image.open(os.path.join(folder_path, filename)).resize((224, 224))
-    print(filename)
-    # Convert the PIL image to a numpy array
-    img_array = np.array(image)
+    # Open the image with OpenCV
+    img = cv2.imread(os.path.join(folder_path, filename))
+    # Convert to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # Apply Gaussian blur to reduce noise
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    # Apply Otsu's thresholding to binarize the image
+    _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # Invert the binary image to get the dark areas as foreground
+    thresh = cv2.bitwise_not(thresh)
+    # Resize the image with OpenCV
+    resized = cv2.resize(thresh, (224, 224))
+    #trying to convert back to original
+    color = cv2.cvtColor(resized,cv2.COLOR_GRAY2BGR)
+    # Convert the OpenCV image to a numpy array
+    img_array = np.array(color)
     # Normalize the pixel values to the range [0,1]
     img_array = img_array / 255.0
     # Add the image array to the list of X values
     X.append(img_array)
-    # counter+=1
+    #Printing Filename
+    print(filename)
+
 
 # Convert the list of X values to a numpy array
 X = np.array(X)
