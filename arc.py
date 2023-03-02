@@ -134,5 +134,6 @@ model.fit(X, y, epochs=10, batch_size=32, verbose=1)
 loss, accuracy = model.evaluate(X, y, verbose=0)
 print('Accuracy:', accuracy)
 
+model.save('Diabetic.h5')
 
 
