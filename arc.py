@@ -1,16 +1,17 @@
 import tensorflow as tf
 from tensorflow.keras import layers, models
-import pandas as pd
-from PIL import Image
+# import pandas as pd
+# from PIL import Image
 import numpy as np
 import os
 import cv2
+from sklearn.model_selection import train_test_split
 
 # Load the CSV file with the labels
-df = pd.read_csv('ODIR-5K/ODIR-5K/input.csv')
-# Extract the labels for DR
-y = df['D'].values
-print("Y = ",y)
+# df = pd.read_csv('ODIR-5K/ODIR-5K/input.csv')
+# # Extract the labels for DR
+# y = df['D'].values
+# print("Y = ",y)
 # Define the CNN model architecture
 model = models.Sequential()
 model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(224, 224, 3)))
@@ -127,13 +128,18 @@ X = np.array(X)
 y = np.array(y)
 print("Length = ",len(X))
 
+# Split the dataset into training and validation sets
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print(len(X_train),len(y_train))
+
 # Train the model
-model.fit(X, y, epochs=10, batch_size=32, verbose=1)
+model.fit(X_train, y_train, epochs=10, batch_size=32, validation_data=(X_val, y_val), verbose=1)
+
 
 # Evaluate the model
 loss, accuracy = model.evaluate(X, y, verbose=0)
 print('Accuracy:', accuracy)
 
 model.save('Diabetic.h5')
-
 
